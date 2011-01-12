@@ -174,3 +174,62 @@ describe('supported callbacks', function() {
     expect(completeWasCalled).toBeTruthy()
   })
 })
+
+
+// Context Specs
+describe( "Context", function() {
+  var some_obj, con
+
+  beforeEach(function() {
+	some_obj = {
+	  context_data : "I'm the context",
+	  onSuccess : function(data, ts, xhr) {
+		expect(this.context_data).toBe("I'm the context");
+	  },
+	  onError : function(xhr, data) {
+		expect(this.context_data).toBe("I'm the context");
+	  },
+	  onComplete : function( xhr, ts ) {
+		expect(this.context_data).toBe("I'm the context");
+	  }
+	}
+	con =  { url : '/test',
+			 method : 'get',
+			 context : some_obj,
+			 success : some_obj.onSuccess,
+			 complete : some_obj.onComplete,
+			 error : some_obj.onError
+		   }
+
+  })
+  describe( "Success", function() {
+	beforeEach(function() {
+	  fakeAjax( { urls : { '/test' : { successData : 'hi' } } } )
+	})
+	it( "With context", function() {
+	  $.ajax( con );
+	})
+	it( "Without context", function() {
+	  delete con['context']
+	  con.complete = con.success = function() {
+		expect( this.context_data ).not.toBeDefined()
+	  }
+	  $.ajax( con );
+	})
+  })
+  describe( "Error", function() {
+	beforeEach(function() {
+	  fakeAjax( { urls : { '/test' : { errorMessage : 'hi' } } } )
+	})
+	it( "With context", function() {
+	  $.ajax( con );
+	})
+	it( "Without context", function() {
+	  delete con['context']
+	  con.complete = con.error = function() {
+		expect( this.context_data ).not.toBeDefined()
+	  }
+	  $.ajax( con );
+	})
+  })
+})
